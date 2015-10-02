@@ -20,8 +20,10 @@ module Hobbit
       end
     end
 
-    def finish
-      unless (100..199).include?(status) || status == 204
+    def finish      
+      if status == 204 || status == 205 || status == 304 || (100..199).include?(status)
+        headers.delete 'Content-Type'
+      else
         headers['Content-Length'] = @length.to_s
       end
       [status, headers, body]
