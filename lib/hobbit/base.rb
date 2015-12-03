@@ -13,7 +13,7 @@ module Hobbit
       
       def any(path, verbs, &block)
         verbs.each do |verb|
-          routes[verb.to_s.downcase] << compile_route(path, &block)
+          routes[verb.to_s.upcase] << compile_route(path, &block)
         end
       end
       
