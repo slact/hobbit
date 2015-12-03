@@ -10,7 +10,13 @@ module Hobbit
       %w(DELETE GET HEAD OPTIONS PATCH POST PUT).each do |verb|
         define_method(verb.downcase) { |path, &block| routes[verb] << compile_route(path, &block) }
       end
-
+      
+      def any(path, verbs, &block)
+        verbs.each do |verb|
+          routes[verb.to_s.downcase] << compile_route(path, &block)
+        end
+      end
+      
       alias :_new :new
       def new(*args, &block)
         stack.run _new(*args, &block)
@@ -33,13 +39,21 @@ module Hobbit
 
       def compile_route(path, &block)
         route = { block: block, compiled_path: nil, extra_params: [], path: path }
-
-        compiled_path = path.gsub(/:\w+/) do |match|
-          route[:extra_params] << match.gsub(':', '').to_sym
-          '([^/?#]+)'
+        
+        if Regexp === path
+          compiled_path = path
+          path.named_captures.each do |k, v|
+            route[:extra_params] << k
+          end
+          route[:compiled_path] = compiled_path
+        else
+          compiled_path = path.gsub(/:\w+/) do |match|
+            route[:extra_params] << match.gsub(':', '').to_sym
+            '([^/?#]+)'
+          end
+          route[:compiled_path] = /^#{compiled_path}$/
         end
-        route[:compiled_path] = /^#{compiled_path}$/
-
+        
         route
       end
     end
